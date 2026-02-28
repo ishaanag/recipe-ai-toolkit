@@ -5,8 +5,6 @@ Two command-line tools:
 - `recipe-scrape`: scrape recipe webpages into Markdown files
 - `recipe-macros`: estimate per-serving macros from Markdown recipes using Gemini and write results back to frontmatter
 
-This README is written for a first-time VS Code user on macOS.
-
 ## 1) First-time setup (copy/paste)
 
 Open this folder in VS Code, then open a terminal (`Terminal` → `New Terminal`) and run:
