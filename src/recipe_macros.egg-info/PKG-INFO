@@ -1,0 +1,214 @@
+Metadata-Version: 2.4
+Name: recipe-macros
+Version: 0.1.0
+Summary: Estimate recipe macros from markdown using Gemini and write results to frontmatter
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.31.0
+Requires-Dist: PyYAML>=6.0.0
+Requires-Dist: beautifulsoup4>=4.12.0
+Requires-Dist: recipe-scrapers>=15.0.0
+
+# recipe-macros
+
+Estimate per-serving macros from recipe markdown files using Google Gemini, save JSON outputs, and write macros into YAML frontmatter.
+
+Use it on any markdown recipe corpus (Obsidian vaults, exported blog recipes, personal notes), not just one source site.
+
+All shell commands in this README are compatible with both `bash` and `zsh`.
+
+## Features
+
+- Works with any markdown recipe set (not tied to a single site)
+- Recursively scans folders (`**/*.md`)
+- Extracts ingredients from frontmatter or `## Ingredients` sections
+- Normalizes servings and ingredient lines for better consistency
+- Writes machine-readable outputs to mirrored `*.macros.json`
+- Injects/updates frontmatter keys: `calories`, `protein`, `carbs`, `fat`
+- Supports batching, resume, and overwrite workflows
+
+## Quick start
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -e .
+export GEMINI_API_KEY="YOUR_KEY"
+recipe-macros --input /path/to/recipes --out recipes_with_macros
+```
+
+## Setup
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -e .
+export GEMINI_API_KEY="YOUR_KEY"
+```
+
+To persist the API key across new shells:
+
+```bash
+# zsh
+echo 'export GEMINI_API_KEY="YOUR_KEY"' >> ~/.zshrc
+. ~/.zshrc
+
+# bash
+echo 'export GEMINI_API_KEY="YOUR_KEY"' >> ~/.bashrc
+. ~/.bashrc
+```
+
+## Usage
+
+### Via installed CLI
+
+```bash
+recipe-macros --input /path/to/recipes --out recipes_with_macros
+```
+
+### Via compatibility script
+
+```bash
+python3 run_recipe_macros.py --input /path/to/recipes --out recipes_with_macros
+```
+
+`run_recipe_macros.py` is a launcher that calls the packaged CLI under `src/recipe_macros/`.
+
+## Website scraping (generalized)
+
+Use `recipe-scrape` to collect recipe markdown files from any site using either direct URLs or index-page discovery.
+
+### Installable scraper CLI
+
+```bash
+recipe-scrape --output-dir export --url https://example.com/recipe/foo
+```
+
+### Discover links from an index page
+
+```bash
+recipe-scrape \
+	--output-dir export \
+	--index-url https://example.com/recipes \
+	--include-pattern '/recipe/' \
+	--base-url https://example.com
+```
+
+### Use built-in site presets
+
+```bash
+# America\'s Test Kitchen
+recipe-scrape --preset atk --output-dir export
+
+# Cookwell
+recipe-scrape --preset cookwell --output-dir export
+```
+
+### Input from a text file of URLs
+
+```bash
+recipe-scrape --output-dir export --urls-file urls.txt
+```
+
+### Discovery-only test (no fetch/write)
+
+```bash
+recipe-scrape --preset atk --dry-run --max-links 20
+```
+
+Convenience launcher:
+
+- `python3 run_recipe_scrape.py ...` → `recipe-scrape`
+
+## Common commands
+
+- First 25 files:
+
+```bash
+recipe-macros --input /path/to/recipes --limit 25
+```
+
+- Continue from file 26:
+
+```bash
+recipe-macros --input /path/to/recipes --start-index 26
+```
+
+- Full overwrite (recompute and rewrite `.md` frontmatter):
+
+```bash
+recipe-macros --input /path/to/recipes --pattern '**/*.md' --model gemini-3-flash-preview
+```
+
+- Skip already-computed JSON outputs:
+
+```bash
+recipe-macros --input /path/to/recipes --skip-existing
+```
+
+- Skip files that already have frontmatter macros (useful if JSON cache is deleted):
+
+```bash
+recipe-macros --input /path/to/recipes --skip-if-frontmatter-present
+```
+
+## Example transformation
+
+Input frontmatter:
+
+```yaml
+---
+title: Example Pasta
+yields: 4 servings
+---
+```
+
+Output frontmatter after run:
+
+```yaml
+---
+title: Example Pasta
+yields: 4 servings
+calories: 510
+protein: 24.6
+carbs: 58.2
+fat: 19.4
+---
+```
+
+## Project layout
+
+```text
+.
+├── run_recipe_macros.py         # Convenience launcher for macro CLI
+├── run_recipe_scrape.py         # Convenience launcher for scrape CLI
+├── pyproject.toml               # Packaging + CLI config
+├── src/
+│   └── recipe_macros/
+│       ├── cli.py               # argparse interface
+│       ├── core.py              # extraction, model call, write-back
+│       └── __init__.py
+│   └── recipe_scrape/
+│       ├── cli.py               # generalized scraping interface
+│       ├── core.py              # discovery + extraction + markdown writer
+│       └── __init__.py
+└── .env.example
+```
+
+## Model notes
+
+Default model is `gemini-3-flash-preview` with fallback to `gemini-2.5-flash` if unavailable.
+
+## Input expectations
+
+Best results when recipe markdown has:
+
+- Frontmatter with `servings`/`yield`/`yields` (optional but helpful)
+- `ingredients` list in frontmatter **or** an `## Ingredients` section
+
+## GitHub sharing checklist
+
+- Remove local-only generated folders before pushing (already in `.gitignore`)
+- Never commit real API keys (`.env` is ignored)
+- Add one screenshot or terminal gif of a successful run
+- Add 2–3 sample recipes in a `samples/` folder if you want a better public demo

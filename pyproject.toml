@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recipe-macros"
+version = "0.1.0"
+description = "Estimate recipe macros from markdown using Gemini and write results to frontmatter"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "requests>=2.31.0",
+  "PyYAML>=6.0.0",
+  "beautifulsoup4>=4.12.0",
+  "recipe-scrapers>=15.0.0",
+]
+
+[project.scripts]
+recipe-macros = "recipe_macros.cli:main"
+recipe-scrape = "recipe_scrape.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

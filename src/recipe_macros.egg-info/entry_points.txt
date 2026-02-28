@@ -1,0 +1,3 @@
+[console_scripts]
+recipe-macros = recipe_macros.cli:main
+recipe-scrape = recipe_scrape.cli:main

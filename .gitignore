@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.venv/
+
+# OS/editor
+.DS_Store
+.vscode/
+
+# Secrets
+.env
+
+# Generated outputs
+recipes_with_macros/
+export/
